@@ -1,2 +1,2 @@
 # Getting started
-https://docs.docker.com/language/nodejs/containerize/
+https://docs.docker.com/language/
