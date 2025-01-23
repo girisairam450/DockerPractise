@@ -1,0 +1,146 @@
+Linux Commands
+
+------------Know the OS version -------------
+cat /etc/os-release
+
+---------- Transfer file between servers ----------
+scp [OPTION] [user@]SRC_HOST:]file1 [user@]DEST_HOST:]file2
+
+OPTION - scp options such as cipher, ssh configuration, ssh port, limit, recursive copy
+[user@]SRC_HOST:]file1 - Source file.
+[user@]DEST_HOST:]file2 - Destination file
+
+example :
+					TO SEND
+sudo scp /home/user1/notes.txt user1@11.111.111.111:/home/user1
+					TO RECEIVE
+sudo scp user1@11.111.111.111:/home/user1 /home/user1/notes.txt
+
+nohup sudo scp /home/user1/PyProject user1@11.11.111.111:/nfs/user1
+
+---------- Find a file ----------
+find .[directory] -name [filename/directory]
+
+---------- Find the type of a File -------------
+file <file-name>
+
+example:
+find ./ -name notes.txt
+
+sudo netstat -nalp |grep 5814
+
+----------- Find the Linux Kernal ---------
+uname -a	gives Linux Kernal version and architecture
+uname -r	gives Kernal version
+uname		gives Linux
+
+------Restart sshd after ssh port change from /etc/ssh/sshd_config------
+systemctl restart sshd 
+
+----------- Add user to the machine -----------
+sudo useradd <username> -m -s /bin/bash -G docker, sudo
+-G = Groups
+-m = Creates /home/username direcotory
+-s = Shell
+
+Modify user
+sudo usermod -aG docker $USER
+
+sudo deluser $USER sudo
+sudo passwd $USER
+
+sudo killall -u $USER && sudo deluser --remove-home -f $USER
+
+Example: sudo useradd user1 -m -s /bin/bash -G sudo
+
+----------- Sets the search to find commands from history --------------
+set -o vi
+[escape] [/] [search word]
+press n for next word
+
+----------- python virtual environment in Linux---------------------
+$ sudo -H pip3 install --upgrade pip
+$ virtualenv swciEnv
+$ source swciEnv/bin/activate
+
+------------ Set Proxy for that instance ------------------------------------
+export http_proxy=<proxy-url>
+export https_proxy=<proxy-url>
+export HTTP_PROXY=<proxy-url>
+export HTTPS_PROXY=<proxy-url>
+
+ping -c4 <proxy-url>
+
+export http_proxy=
+export https_proxy=
+export HTTP_PROXY=
+export HTTPS_PROXY=
+
+------------- Set Proxy globally (system wide) -------------
+vi /etc/profile
+add the export statements
+
+
+-------------- Set proxy for APT ------------------------
+sudo vi /etc/apt/apt.conf.d/proxy.conf
+
+Add the below text into the file
+Acquire {
+  http::Proxy "http://<proxy-server-ip>:port/";
+  https::Proxy "http://<proxy-server-ip>:port/";
+}
+
+-------------To Update the named servers in resolver -------
+vi to /etc/resolv.conf and add another nameserver 
+
+------------Check the reachability of ip and port ------------
+telnet <ip> <port>
+Example: telnet 11.11.111.111 50505
+Expected response: Connected to 11.11.111.111
+
+------------- Check the reachability of service -------------
+wget https://11.11.111.111:50505/is_up
+
+If it because of some proxy it is not reachable then
+use below to not pass this request via exisiting proxy
+export no_proxy=11.11.111.111
+
+------------ Open up port ---------------------------------
+ufw allow <port number>
+
+------------ Check status of firewall ---------------------------
+sudo ufw status 
+: if status is 'inactive' -> no firewall
+: if status is 'active'   -> we need to open up desired ports
+
+------------- Check the validity of the certificate -----------------
+
+openssl x509 -enddate -noout -in <cert-key>.pem
+
+-------------- Set up a Password Less SSH between the machines ---------
+
+machine1:~$ cd .ssh
+machine1:~/.ssh$ ls -l
+total 12
+-rw------- 1 user2 user2 2610 Sep 27 12:46 id_rsa
+-rw-r--r-- 1 user2 user2  573 Sep 27 12:46 id_rsa.pub
+-rw-r--r-- 1 user2 user2  888 Nov 21 15:21 known_hosts
+machine2:~/.ssh$ ssh-keygen
+
+machine1:~/.ssh$ ssh-copy-id user1@11.11.111.111
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/user2/.ssh/id_rsa.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+user1@11.11.111.111's password:
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'user1@11.11.111.111'"
+and check to make sure that only the key(s) you wanted were added.
+
+
+-------------------Jupyter on Ubuntu ------------------
+jupyter notebook --no-browser --port=8889 --ip=0.0.0.0 
+
+port forward to windows via 
+ssh -L 8889:<ip-address>:8889 user1@<ip-address>

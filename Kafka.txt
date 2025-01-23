@@ -1,0 +1,130 @@
+===========================================================================
+================================KAFKA======================================
+===========================================================================
+
+
+-------------------- Downlod the Kafka tar --------------------------------
+wget https://archive.apache.org/dist/kafka/2.8.0/kafka_2.12-2.8.0.tgz
+wget https://archive.apache.org/dist/kafka/3.5.1/kafka_2.12-3.5.1.tgz
+tar -xzf kafka_2.12-2.8.0.tgz
+
+
+-------------------- Start the Zoo Keeper Server --------------------------
+cd kafka_2.12-2.8.0
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+-------------------- Start the Kafka Server aka Broker Service ------------
+cd kafka_2.12-2.8.0
+bin/kafka-server-start.sh config/server.properties
+
+
+-------------------- Create a Kafka Topic ---------------------------------
+cd kafka_2.12-2.8.0
+bin/kafka-topics.sh --create --topic news --bootstrap-server localhost:9092
+
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic bankbranch  --partitions 2
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic bankbranch
+
+
+-------------------- Start a producer associated with topic ----------------
+bin/kafka-console-producer.sh --topic news --bootstrap-server localhost:9092
+# Enter some data
+> Good morning
+> Good day
+> Enjoy the Kafka lab
+
+# Produce data with key and seperator
+bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic bankbranch --property parse.key=true --property key.separator=:
+1:{"atmid": 1, "transid": 100}
+1:{"atmid": 1, "transid": 101}
+2:{"atmid": 2, "transid": 200}
+2:{"atmid": 2, "transid": 203}
+1:{"atmid": 1, "transid": 104}
+
+------------------- Start the consumer associated with topic ----------------
+cd kafka_2.12-2.8.0
+bin/kafka-console-consumer.sh --topic news --from-beginning --bootstrap-server localhost:9092
+
+# Consumer to consume data based on the key
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic bankbranch --from-beginning --property print.key=true --property key.separator=:
+
+# Create a group for the offset creation
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic bankbranch --group atm-app
+
+
+--------------------  Cosumer groups to set Offset ----------------------------------
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group atm-app
+
+# Reset offset. All messages will be conusmed on consumer start.
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092  --topic bankbranch --group atm-app --reset-offsets --to-earliest --execute
+
+# Reset offset by only 2 data points per partition. In this 2 partions means 4 last datapoints will be
+# consumed on consumer start
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092  --topic bankbranch --group atm-app --reset-offsets --shift-by -2 --execute
+
+-------------------Additional Help -------------------------------------------
+Kafka uses the directory /tmp/kakfa-logs to store the messages.
+Explore the folder news-0 inside /tmp/kakfa-logs.This is where all the messages are stored.
+
+Explore the folder /home/project/kafka_2.12-2.8.0
+This folder has the below 3 sub directories
+bin			-> shell scripts to control kafka and zookeeper
+config		-> configuration files
+logs		-> log files forkafka and zookeeper
+
+-----------------------Remove the Kafka Direcotry -----------------------------
+rm kafka_2.12-2.8.0.tgz
+
+
+
+
+=========================================================================================
+================================ KAFKA PYTHON CLIENT ====================================
+=========================================================================================
+# Start the ZooKeeper and the Kafka server before starting python client.
+
+pip install kafka-python
+
+
+---------------Admin.py -----------
+# Instantiate Client
+admin_client = KafkaAdminClient(bootstrap_servers="localhost:9092", client_id='test')
+# Create a topic
+topic_list = []
+new_topic = NewTopic(name="bankbranch", num_partitions= 2, replication_factor=1)
+topic_list.append(new_topic)
+admin_client.create_topics(new_topics=topic_list)
+# Describe a topic
+configs = admin_client.describe_configs(config_resources=[ConfigResource(ConfigResourceType.TOPIC, "bankbranch")])
+-----------------------------------
+
+---------------Producer.py -----------
+# Start a Producer
+from kafka import KafkaProducer
+import json
+producer = KafkaProducer(value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+producer.send("bankbranch", {'atmid':1, 'transid':100})
+producer.send("bankbranch", {'atmid':2, 'transid':101})
+
+producer.flush()
+producer.close()
+-----------------------------------
+
+-------------Consumer.py------------
+# Start a Consumer	
+from kafka import KafkaConsumer
+consumer = KafkaConsumer('bankbranch',
+                        group_id=None,
+                         bootstrap_servers=['localhost:9092'],
+                         auto_offset_reset = 'earliest')
+print("Hello")
+print(consumer)
+
+for msg in consumer:
+    print(msg.value.decode("utf-8"))
+-----------------------------------
+
+
+----Connect to Database----------
+python3 -m pip install mysql-connector-python==8.0.31

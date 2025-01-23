@@ -1,0 +1,108 @@
+---------- Tag an Image ----------
+docker tag [image_id] [docker_hub_registry_url]:[tag_name]
+
+---------- Docker Login ----------
+docker login [docker_hub_url]
+
+---------- Push Local Image to Docker Hub ----------
+docker push [docker_hub_registry_url]:[tag_name]
+
+----------- Save Image as tar file --------
+docker save -o [path/filename.tar] [docker_hub_registry_url]:[tag_name]
+
+----------- Load Image from tar file --------
+docker load -i [path/filename.tar]
+
+----------- Build Image from Docker file -----------------------
+docker build [build-args] --tag=[image_name]:[tag_name] .
+
+example:
+docker build --build-arg http_proxy= --build-arg https_proxy= --tag=abc:1.0.0 dockerfile
+
+----------- Copy files from container to host ------------------
+docker cp <container name>:<file path> <host path>
+
+docker cp goofy_roentgen:/out_read.jpg /home/user/images/
+
+----------- Copy files from host to container ------------------
+docker cp <host path> <container name>:<file path> 
+
+docker cp /home/user/images/out_read.jpg  goofy_roentgen:/out_read.jpg 
+
+
+------------- To get the process id of the container ------------------
+docker inspect -f '{{.State.Pid}}' <container id>
+
+------------- Remove all running containers ---------------------------
+docker rm -f $(docker ps -a -q)
+
+------------- Remove containers based on the container name prefix ----------
+docker rm -f $(docker ps -a --format "table {{.Names}}" | grep <search-str>)
+
+------------------------ Remove all images  ---------------------------
+docker rmi -f $(docker images -aq)
+docker images | grep "2.2.1" | awk '{print $1 ":" $2}' | xargs docker rmi
+
+------------- Start the exited Container ------------------------------
+docker start <container_name/container_id>
+docker attach <container_name/container_id>
+
+-------------- To Test if volume mounted properly inside container --------------- 
+docker run -ti --volume=<host-path>:<container-path>:rw ubuntu bash
+ubuntu is the temp image used to verify
+
+
+-------------- Give Permissions to Docker Socket file -----------------
+To be able to connect with docker client
+Before: srw-rw----  After: srw-rw-rw-
+chmod 666 /var/run/docker.sock
+
+--------------- Check Environment variable in container ---------------
+env | grep -i <variable name>
+
+ex: env | grep -i http
+
+---------------- Change Proxy of Host Docker and restart -----------
+systemctl show --property=Environment docker
+
+cat /etc/systemd/system/docker.service.d/https-proxy.conf
+cat /etc/systemd/system/docker.service.d/http-proxy.conf
+cat /etc/systemd/system/docker.service.d/proxy.conf
+
+sudo systemctl restart docker
+sudo systemctl daemon-reload
+sudo systemctl show --property=Environment docker
+
+
+---------------Check access of DTR repository ----------
+curl -iv https://hub.company.com/v2
+
+-------------Meta data cache clear DTR ---------------
+~/.docker/trust/tuf/<hub-path>
+
+----------------Generate Keys------------------
+docker trust key generate <Name>
+
+Above command will generate both public(current working directory) and private keys (~/.docker/trust/)
+Share the public keys to Ops teams
+
+Do the below step before every push. To ensure if someone didn't set this flag as false in mean time
+export DOCKER_CONTENT_TRUST=1
+
+Load Private Key to the Docker:
+----------------------------------
+Step 1:
+mv the private key to ~/.docker/trust/private/<key>.key
+Step 2:
+chmod 600 ~/.docker/trust/private/<key>.key
+Step 3:
+docker trust key load --name <name> ~/.docker/trust/private/<key>.key
+
+docker trust inspect --pretty <image-name>
+Tag appropriatly
+docker tag <image_id> <image-name>:<image-tag>
+docker push <image-name>:<image-tag>
+
+wget -q <image-path>/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}'
+
+

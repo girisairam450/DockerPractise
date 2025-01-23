@@ -1,0 +1,90 @@
+-------------Install Python from tar ball---------------------
+# Download the source code of python
+wget https://www.python.org/ftp/python/3.8.6/Python-3.8.6.tgz
+
+export PYTHON_VERSION=3.8.6
+export PYTHON_MAJOR=3
+
+# Unzip the python tar ball
+tar -xvzf Python-${PYTHON_VERSION}.tgz
+
+cd Python-${PYTHON_VERSION}
+
+# Run the `configure` script to prepare the installation. This step ensures that the necessary dependencies are detected and sets up the installation according to your system’s configuration.
+
+./configure \
+    --prefix=/opt/python/${PYTHON_VERSION} \
+    --enable-shared \
+    --enable-optimizations \
+    --enable-ipv6 \
+    LDFLAGS=-Wl,-rpath=/opt/python/${PYTHON_VERSION}/lib,--disable-new-dtags
+
+# make command compiles the sour	
+make
+
+# Installs the python
+sudo make install
+
+
+# Make this python as default version
+cd /opt/python/${PYTHON_VERSION}/bin
+sudo ln -s python3.8 python
+
+# Set the python path to specific user
+echo "PATH=/opt/python/3.8.6/bin/:$""PATH" >> ~/.profile
+. ~/.profile
+
+
+# Create virtual environment out of installed python
+sudo apt-get install python-pip
+pip install virtualenv
+
+virtualenv <name>
+
+
+FYI:
+# Some times you need this on the source machine
+sudo apt-get install libffi-dev
+
+
+PYTHONPATH="/opt/python/3.8.6/lib/python3.8/site-packages/":"${PYTHONPATH}"
+export PYTHONPATH
+export PATH=”$PATH:/usr/bin/python3.8”
+
+PYTHONPATH="/home/giri/.local/lib/python3.8/site-packages/":"${PYTHONPATH}"
+export PYTHONPATH
+export PATH=”$PATH:/usr/bin/python3.8”
+
+
+=====================================================================
+===========================Install Conda=============================
+=====================================================================
+
+sudo apt-get install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+
+mkdir Downloads
+
+cd Downloads
+
+curl -O https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh
+
+bash ~/Downloads/Anaconda3-2024.02-1-Linux-x86_64.sh
+
+source  /home/giri/anaconda3/bin/activate
+
+conda init
+
+# The base environment is activated by default
+conda config --set auto_activate_base True
+
+# The base environment is not activated by default
+conda config --set auto_activate_base False
+
+conda create --name aioenv python=3.8
+conda activate aioenv
+
+conda create --name raftenv python=3.10
+export PATH=$PATH:/home/giri/.local/bin
+
+
+conda remove -n ENV_NAME --all
